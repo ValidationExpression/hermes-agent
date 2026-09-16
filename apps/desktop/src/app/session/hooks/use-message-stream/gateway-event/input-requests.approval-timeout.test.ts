@@ -68,6 +68,24 @@ describe('approval request.cancel', () => {
     expect($routeRequest.get()?.path).toBe('/settings?tab=config:safety')
   })
 
+  it('withdraws a queued request without dropping the front approval', () => {
+    setApprovalRequest({
+      sessionId: 's1',
+      command: 'first',
+      description: '',
+      requestId: 'front',
+      serverRequestId: 'srv-front'
+    })
+    parkApproval()
+    const updateSessionState = vi.fn()
+
+    expect(handleInputRequestEvent(context('answered', updateSessionState))).toBe(true)
+    expect($approvalRequests.get()['s1']?.requestId).toBe('front')
+    clearApprovalRequest('s1', 'front')
+    expect($approvalRequests.get()['s1']).toBeUndefined()
+    expect(updateSessionState).not.toHaveBeenCalled()
+  })
+
   it('answered elsewhere: tears the bar down silently', () => {
     parkApproval()
     const updateSessionState = vi.fn()
